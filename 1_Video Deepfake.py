@@ -4,18 +4,17 @@ import os
 import cv2
 import tensorflow as tf
 
-st.set_page_config(page_title="Deepfake Detection", layout="centered",initial_sidebar_state="auto", menu_items=None)
+st.set_page_config(page_title="Deepfake Detection | Video", layout="centered",initial_sidebar_state="auto", menu_items=None)
 
-upload_dir = "uploads"
-if not os.path.exists(upload_dir):
-    os.makedirs(upload_dir)
+video_upload_dir = "./video_uploads"
+
+if not os.path.exists(video_upload_dir):
+    os.makedirs(video_upload_dir)
 
 @st.cache_resource
 def load_model():
     try:
-        model = tf.keras.models.load_model(
-            'DD_gru_model_epoch(01)_acc(0.82)_valacc(0.83)_loss(0.69)_valloss(0.69)_07-11-24 20-23-07.keras')
-        st.success("Model loaded successfully")
+        model = tf.keras.models.load_model("./DD_Video.keras")
         return model
     except Exception as e:
         st.error(f"Model loading failed: {e}")
@@ -112,7 +111,7 @@ video_file = st.file_uploader("Choose a video file", type=["mp4", "mov"])
 
 if video_file is not None:
     # Save the uploaded video file
-    video_path = os.path.join("uploads", video_file.name)
+    video_path = os.path.join(video_upload_dir, video_file.name)
     with open(video_path, "wb") as f:
         f.write(video_file.getbuffer())
     
@@ -124,10 +123,10 @@ if video_file is not None:
     # Predict with the model
     prediction = model.predict([frame_features, frame_mask])[0]
     result = 'FAKE' if prediction >= 0.50 else 'REAL'
-    confidence = float(prediction)
     
-    st.write(f"Prediction: {result}")
-    st.write(f"Confidence: {confidence:.2f}")
+    st.write(f"### Prediction: {result}")
     
-    # Optionally remove the uploaded video after prediction
-    # os.remove(video_path)
+    for filename in os.listdir(video_upload_dir):
+        file_path = os.path.join(video_upload_dir, filename)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
