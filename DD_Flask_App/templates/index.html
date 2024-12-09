@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div>
+    <form id="upload-form" method="POST" action="/upload" enctype="multipart/form-data" class="mt-4">
+        <div class="mb-3">
+            <label for="videoFile" class="form-label">Upload Video (Max: 100MB)</label>
+            <input class="form-control" type="file" id="videoFile" name="videoFile" accept="video/*" required>
+        </div>
+        <div class="mb-3" id="video-preview-container" style="display: none;">
+            <video id="video-preview" controls style="width:60%; margin-left: 12em;"></video>
+        </div>
+        <button type="submit" class="btn btn-primary container">Analyse</button>
+    </form>
+    <div id="result" class="mt-3 text-center"></div>
+    <div id="error" class="mt-3 text-center"></div>
+    <a href="{{ url_for('fbf') }}" id='fbf-btn' class="btn btn-primary container d-none">Frame-by-Frame Prediction</a>
+
+</div>
+
+<script>
+    const form = document.getElementById('upload-form');
+    const videoFileInput = document.getElementById('videoFile');
+    const videoPreviewContainer = document.getElementById('video-preview-container');
+    const videoPreview = document.getElementById('video-preview');
+    const resultDiv = document.getElementById('result');
+    const errorDiv = document.getElementById('error');
+    const fbfBtn = document.getElementById('fbf-btn');
+
+    // Handle video preview
+    videoFileInput.addEventListener('change', function () {
+        const file = videoFileInput.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            videoPreview.src = url;
+            videoPreviewContainer.style.display = 'block';
+        } else {
+            videoPreviewContainer.style.display = 'none';
+        }
+    });
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const formData = new FormData(form);
+
+        resultDiv.textContent = "Analysing...";
+        try {
+            const response = await fetch('/analyse', {
+                method: 'POST',
+                body: formData,
+            });
+            const result = await response.json();
+            if (result.status === "error") {
+                resultDiv.innerHTML = "";
+                errorDiv.textContent = result.message;
+            } else {
+                resultDiv.innerHTML = `Prediction : ${result.output}, Confidence : ${result.confidence}`;
+                fbfBtn.classList.remove('d-none');
+
+            }
+        } catch (error) {
+            statusDiv.textContent = "Error during analysis.";
+        }
+    });
+</script>
+{% endblock %}

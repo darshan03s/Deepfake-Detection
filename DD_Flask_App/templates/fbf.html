@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h5 style="text-align: center;">Frame by Frame prediction</h5>
+<div style="display: flex; flex-wrap: wrap; gap: 1em;">
+    {% for image in images %}
+    <div>
+        <img src="{{ url_for('serve_prediction', filename=image) }}" alt="{{ image }}" width="112" height="112">
+        <div style="text-align: center;">{{ image.split('_')[1] }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

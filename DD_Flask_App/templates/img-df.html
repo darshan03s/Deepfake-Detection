@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form id="upload-form" method="POST" action="/analyse-img" enctype="multipart/form-data" class="mt-4">
+    <div class="mb-3">
+        <label for="imageFile" class="form-label">Upload Image</label>
+        <input class="form-control" type="file" id="imageFile" name="imageFile" accept="image/*" required>
+    </div>
+    <div class="mb-3" id="image-preview-container" style="display: none;">
+        <img id="image-preview" src="#" alt="Image Preview" class="img-fluid"
+            style="max-width: 30%; margin-left: 16em;">
+    </div>
+    <button type="submit" class="btn btn-primary container" id="submit-btn">Analyse</button>
+</form>
+
+<div id="result-container" style="display:none;">
+    <div style="text-align: center; margin-top: 1em;">
+        <strong style="font-size: large;">Analysis Result: <span id="result-text"></span></strong>
+    </div>
+
+</div>
+
+<script>
+    const imageFileInput = document.getElementById('imageFile');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const resultContainer = document.getElementById('result-container');
+    const resultText = document.getElementById('result-text');
+    const submitBtn = document.getElementById('submit-btn');
+
+    imageFileInput.addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+                imagePreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imagePreviewContainer.style.display = 'none';
+        }
+    });
+
+    document.getElementById('upload-form').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent the form from submitting traditionally
+        const formData = new FormData(this);
+
+        fetch('/analyse-img', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    resultText.textContent = data.result;
+                    resultContainer.style.display = 'block';
+                } else {
+                    resultText.textContent = 'Error processing the image';
+                    resultContainer.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                resultText.textContent = 'An error occurred';
+                resultContainer.style.display = 'block';
+            });
+    });
+</script>
+{% endblock %}
